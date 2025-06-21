@@ -1,16 +1,11 @@
-package presentation.admin
+package presentation.headofexperts
 
 import dev.inmo.tgbotapi.types.buttons.ReplyKeyboardMarkup
 import dev.inmo.tgbotapi.types.buttons.SimpleKeyboardButton
 import presentation.CommonStrings
 
-fun generateAdminMenu() = ReplyKeyboardMarkup(
+fun generateHeadOfExpertsMenu() = ReplyKeyboardMarkup(
     listOf(
-        listOf(
-            SimpleKeyboardButton("Керівники експертів"),
-            SimpleKeyboardButton("Експерти"),
-            SimpleKeyboardButton("Винороби")
-        ),
         listOf(
             SimpleKeyboardButton(CommonStrings.START_COMPETITION),
             SimpleKeyboardButton(CommonStrings.COMPETITIONS)
@@ -19,14 +14,8 @@ fun generateAdminMenu() = ReplyKeyboardMarkup(
     resizeKeyboard = true,
     oneTimeKeyboard = false
 )
-
-fun generateAdminCompetitionActiveMenu() = ReplyKeyboardMarkup(
+fun generateHeadOfExpertsActiveMenu() = ReplyKeyboardMarkup(
     listOf(
-        listOf(
-            SimpleKeyboardButton("Керівники експертів"),
-            SimpleKeyboardButton("Експерти"),
-            SimpleKeyboardButton("Винороби")
-        ),
         listOf(
             SimpleKeyboardButton(CommonStrings.ASSESS),
             SimpleKeyboardButton(CommonStrings.PREVIEW_RESULTS),

@@ -20,8 +20,8 @@ dependencies {
     implementation("io.github.likespro:commons-core:3.1.0")
     implementation("io.github.likespro:commons-reflection:3.1.0")
 
-    implementation("io.github.likespro:atomarix-core:1.0.0")
-    implementation("io.github.likespro:atomarix-exposed:1.0.0")
+    implementation("io.github.likespro:atomarix-core:1.0.0-disabled")
+    implementation("io.github.likespro:atomarix-exposed:1.0.0-disabled")
 
 //    implementation("org.telegram:telegrambots-longpolling:8.3.0")
 //    implementation("org.telegram:telegrambots-longpolling:8.3.0")
@@ -29,6 +29,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-gson:3.1.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 
+    implementation("com.zaxxer:HikariCP:5.1.0")
     implementation("io.insert-koin:koin-ktor:3.5.0")
     implementation("org.jetbrains.exposed:exposed-core:0.61.0")
     implementation("org.jetbrains.exposed:exposed-jdbc:0.61.0")

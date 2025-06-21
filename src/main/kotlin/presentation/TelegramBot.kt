@@ -3,7 +3,13 @@ package presentation
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.telegramBot
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPolling
-import presentation.admin.addHeadsOfExpertsFlow
+import presentation.InlineMarkupPaginationUtils.setupInlineMarkupPagination
+import presentation.StartBotFlow.setupStartBotFlow
+import presentation.flows.AddUserFlow.setupAddUserFlow
+import presentation.flows.AssessFlow.setupAssessFlow
+import presentation.flows.BackFlow.setupBackButtonFlow
+import presentation.flows.CreateCompetitionFlow.setupCreateCompetitionFlow
+import presentation.flows.GetCompetitionResultsFlow.setupGetCompetitionResultsFlow
 
 object TelegramBot {
     suspend fun runTelegramBot() {
@@ -12,8 +18,13 @@ object TelegramBot {
         bot.buildBehaviourWithLongPolling {
             println(getMe())
 
-            startBotFlow()
-            addHeadsOfExpertsFlow()
+            setupInlineMarkupPagination()
+            setupStartBotFlow()
+            setupBackButtonFlow()
+            setupAddUserFlow()
+            setupGetCompetitionResultsFlow()
+            setupCreateCompetitionFlow()
+            setupAssessFlow()
         }.join()
     }
 }

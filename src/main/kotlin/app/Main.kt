@@ -1,6 +1,11 @@
 package app
 
 import app.di.ModuleLoader.configureDI
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.InlineKeyboardMarkup
+import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.CallbackDataInlineKeyboardButton
+import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
+import eth.likespro.commons.reflection.ObjectEncoding.decodeObject
+import eth.likespro.commons.reflection.ObjectEncoding.encodeObject
 import infrastructure.persistence.DatabaseFactory
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.java.KoinJavaComponent.get

@@ -1,18 +1,21 @@
 package application.usecase
 
+import UserAlreadyExistsException
 import domain.model.entity.User
 import domain.ports.repositories.UserRepository
 import kotlinx.serialization.Serializable
 import org.koin.java.KoinJavaComponent.inject
-import kotlin.getValue
 
 @Serializable
-data class GetUserRequest(
-    val phoneNumber: User.PhoneNumber
+data class CreateUserRequest(
+    val user: User
 ) {
-    suspend fun execute(): User? {
+    suspend fun execute(): User {
         val userRepository: UserRepository by inject(UserRepository::class.java)
 
-        return userRepository.findById(phoneNumber)
+        if(userRepository.isExisting(user.phoneNumber))
+            throw UserAlreadyExistsException()
+
+        return userRepository.create(user)
     }
 }

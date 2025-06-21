@@ -1,23 +1,25 @@
 package domain.model.entity
 
-import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.RawChatId
+import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.CallbackDataInlineKeyboardButton
 import domain.model.value.ConversationMetadata
 import domain.model.value.ConversationState
-import domain.model.value.PhoneNumber
 import eth.likespro.commons.models.Entity
+import eth.likespro.commons.models.Pagination
 import eth.likespro.commons.models.Validatable
 import eth.likespro.commons.models.Value
 import kotlinx.serialization.Serializable
 
 @Serializable
-class User(
+data class User(
     val phoneNumber: PhoneNumber,
-    val chatId: RawChatId? // Null if the user has not started the bot yet
+    val chatId: RawChatId?, // Null if the user has not started the bot yet
     val name: Name,
     val role: Role,
     val conversationState: ConversationState = ConversationState.INITIAL,
-    val conversationMetadata: ConversationMetadata = ConversationMetadata("")
+    val conversationMetadata: ConversationMetadata = ConversationMetadata(""),
+    val currentInlineMarkupButtons: List<List<CallbackDataInlineKeyboardButton>> = emptyList(),
+    val inlineMarkupPagination: Pagination = Pagination.ALL,
 ): Entity<User.PhoneNumber> {
     override val id: PhoneNumber
         get() = phoneNumber
