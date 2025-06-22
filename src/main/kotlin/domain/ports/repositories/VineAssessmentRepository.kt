@@ -1,14 +1,11 @@
 package domain.ports.repositories
 
-import domain.model.entity.Category
-import domain.model.entity.User
-import domain.model.entity.Vine
-import domain.model.entity.VineAssessment
+import domain.model.entity.*
 import eth.likespro.atomarix.Atom
 import eth.likespro.atomarix.Atom.Companion.atomic
 import eth.likespro.atomarix.AtomarixRepository
 
 interface VineAssessmentRepository: AtomarixRepository<VineAssessment, VineAssessment.Id> {
-    suspend fun filter(from: User.PhoneNumber?, to: Vine.Id?, category: Category.Name?): List<VineAssessment> = atomic { filter(this, from, to, category) }
-    suspend fun filter(atom: Atom, from: User.PhoneNumber?, to: Vine.Id?, category: Category.Name?): List<VineAssessment>
+    suspend fun filter(competitionId: Competition.Id? = null, from: User.PhoneNumber? = null, to: Vine.Id? = null, category: Category.Name? = null): List<VineAssessment> = atomic { filter(this, competitionId, from, to, category) }
+    suspend fun filter(atom: Atom, competitionId: Competition.Id? = null, from: User.PhoneNumber? = null, to: Vine.Id? = null, category: Category.Name? = null): List<VineAssessment>
 }

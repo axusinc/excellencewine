@@ -47,9 +47,9 @@ object AssessFlow {
         } catch (e: Exception) { e.printStackTrace(); reply(message, CommonStrings.ERROR_UNKNOWN) } }
 
         onDataCallbackQuery { query -> try {
-            val user = GetUserByChatIdRequest(query.user.id.chatId).execute()!!
             if(!query.data.endsWith("_vine_pick") && !query.data.endsWith("_vine_pick_selected"))
                 return@onDataCallbackQuery
+            val user = GetUserByChatIdRequest(query.user.id.chatId).execute()!!
             if (user.conversationState != ConversationState.COMPETITION_VINE_PICK_REQUESTED) {
                 sendIncorrectStateMessage(user.chatId!!)
                 return@onDataCallbackQuery
@@ -61,9 +61,9 @@ object AssessFlow {
         } catch (e: Exception) { e.printStackTrace(); send(query.user.id, CommonStrings.ERROR_UNKNOWN) } }
 
         onDataCallbackQuery { query -> try {
-            val user = GetUserByChatIdRequest(query.user.id.chatId).execute()!!
             if(!query.data.endsWith("_category_pick") && !query.data.endsWith("_category_pick_selected"))
                 return@onDataCallbackQuery
+            val user = GetUserByChatIdRequest(query.user.id.chatId).execute()!!
             if (user.conversationState != ConversationState.COMPETITION_CATEGORY_PICK_REQUESTED) {
                 sendIncorrectStateMessage(user.chatId!!)
                 return@onDataCallbackQuery
@@ -76,9 +76,9 @@ object AssessFlow {
         } catch (e: Exception) { e.printStackTrace(); send(query.user.id, CommonStrings.ERROR_UNKNOWN) } }
 
         onDataCallbackQuery { query -> try {
-            val user = GetUserByChatIdRequest(query.user.id.chatId).execute()!!
             if(!query.data.endsWith("_mark") && !query.data.endsWith("_mark_selected"))
                 return@onDataCallbackQuery
+            val user = GetUserByChatIdRequest(query.user.id.chatId).execute()!!
             if (user.conversationState != ConversationState.COMPETITION_VINE_MARK_REQUESTED) {
                 sendIncorrectStateMessage(user.chatId!!)
                 return@onDataCallbackQuery
@@ -193,19 +193,19 @@ object AssessFlow {
     }
 
     suspend fun <BC : BehaviourContext> BC.assessVine(user: User, vineId: Vine.Id, category: Category, mark: Int) {
+        val activeCompetition = GetActiveCompetitionRequest().execute()!!
+
         val vineAssessmentRepository: VineAssessmentRepository by inject(VineAssessmentRepository::class.java)
         vineAssessmentRepository.upsert(VineAssessment(
+            competitionId = activeCompetition.id,
             from = user.id,
             to = vineId,
             category = category.name,
             mark = mark
         ))
 
-        UpdateConversationStateRequest(
-            user.chatId!!,
-            ConversationState.INITIAL
-        ).execute()
+        send(user.chatId!!.toChatId(), "Ви успішно оцінили вино ${vineId.name.value} в категорії ${category.name.value} на $mark балів.")
 
-        send(user.chatId.toChatId(), "Ви успішно оцінили вино ${vineId.name.value} в категорії ${category.name.value} на $mark балів.", replyMarkup = MenuUtils.generateMenu(ConversationState.INITIAL, user.role, true))
+        requestCompetitionCategoryPick(user, vineId)
     }
 }

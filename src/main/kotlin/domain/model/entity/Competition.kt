@@ -13,7 +13,7 @@ data class Competition(
     val name: Name,
     val vineType: Vine.Type,
     val startedAt: Timestamp,
-    val endedAt: Timestamp?,
+    var endedAt: Timestamp?,
     val experts: List<User>,
     val categories: List<Category>,
     val vines: List<Vine>

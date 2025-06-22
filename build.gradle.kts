@@ -25,6 +25,7 @@ dependencies {
 
 //    implementation("org.telegram:telegrambots-longpolling:8.3.0")
 //    implementation("org.telegram:telegrambots-longpolling:8.3.0")
+    implementation("io.github.evanrupert:excelkt:1.0.2")
     implementation("dev.inmo:tgbotapi:25.0.1")
     implementation("io.ktor:ktor-serialization-gson:3.1.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")

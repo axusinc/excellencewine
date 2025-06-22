@@ -3,6 +3,9 @@ package presentation
 import domain.model.entity.User
 
 object CommonStrings {
+    const val YES = "✅ Так"
+    const val NO = "❌ Ні"
+
     const val BACK_BUTTON_TEXT = "⬅️ Назад"
     const val NEXT_BUTTON_TEXT = "➡️ Далі"
     const val ERROR_UNKNOWN = "Виникла невідома помилка. Спробуйте ще раз через 15 секунд або зверніться до адміністратора."

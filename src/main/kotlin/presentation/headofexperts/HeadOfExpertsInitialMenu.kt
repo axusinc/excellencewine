@@ -17,7 +17,6 @@ fun generateHeadOfExpertsMenu() = ReplyKeyboardMarkup(
 fun generateHeadOfExpertsActiveMenu() = ReplyKeyboardMarkup(
     listOf(
         listOf(
-            SimpleKeyboardButton(CommonStrings.ASSESS),
             SimpleKeyboardButton(CommonStrings.PREVIEW_RESULTS),
             SimpleKeyboardButton(CommonStrings.END_COMPETITION),
         )

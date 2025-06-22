@@ -77,7 +77,7 @@ object CreateCompetitionFlow {
             requestCompetitionVineType(user, message, competitionName)
         } catch (e: Exception) { e.printStackTrace(); reply(message, CommonStrings.ERROR_UNKNOWN) } }
 
-        onDataCallbackQuery("red_vine") { query -> try {
+        onDataCallbackQuery("red_vine_type") { query -> try {
             val user = GetUserByChatIdRequest(query.user.id.chatId).execute()!!
             if(user.conversationState != ConversationState.COMPETITION_VINE_TYPE_REQUESTED){
                 sendIncorrectStateMessage(user.chatId!!)
@@ -88,7 +88,7 @@ object CreateCompetitionFlow {
             requestCompetitionExperts(user, userCompetitionVineTypeRequestedMetadata.name, Vine.Type.RED)
         } catch (e: Exception) { e.printStackTrace(); send(query.user.id, CommonStrings.ERROR_UNKNOWN) } }
 
-        onDataCallbackQuery("white_vine") { query -> try {
+        onDataCallbackQuery("white_vine_type") { query -> try {
             val user = GetUserByChatIdRequest(query.user.id.chatId).execute()!!
             if(user.conversationState != ConversationState.COMPETITION_VINE_TYPE_REQUESTED){
                 sendIncorrectStateMessage(user.chatId!!)
@@ -101,9 +101,9 @@ object CreateCompetitionFlow {
 
         // Select an expert from the list
         onDataCallbackQuery { query -> try {
-            val user = GetUserByChatIdRequest(query.user.id.chatId).execute()!!
             if(!query.data.endsWith("_expert") && !query.data.endsWith("_expert_selected"))
                 return@onDataCallbackQuery
+            val user = GetUserByChatIdRequest(query.user.id.chatId).execute()!!
             if (user.conversationState != ConversationState.COMPETITION_EXPERTS_SELECTION_REQUESTED) {
                 sendIncorrectStateMessage(user.chatId!!)
                 return@onDataCallbackQuery
@@ -171,9 +171,9 @@ object CreateCompetitionFlow {
 
         // Select a category from the list
         onDataCallbackQuery { query -> try {
-            val user = GetUserByChatIdRequest(query.user.id.chatId).execute()!!
             if(!query.data.endsWith("_category") && !query.data.endsWith("_category_selected"))
                 return@onDataCallbackQuery
+            val user = GetUserByChatIdRequest(query.user.id.chatId).execute()!!
             if (user.conversationState != ConversationState.COMPETITION_CATEGORIES_SELECTION_REQUESTED) {
                 sendIncorrectStateMessage(user.chatId!!)
                 return@onDataCallbackQuery
@@ -252,9 +252,9 @@ object CreateCompetitionFlow {
 
         // Select a category from the list
         onDataCallbackQuery { query -> try {
-            val user = GetUserByChatIdRequest(query.user.id.chatId).execute()!!
             if(!query.data.endsWith("_vine") && !query.data.endsWith("_vine_selected"))
                 return@onDataCallbackQuery
+            val user = GetUserByChatIdRequest(query.user.id.chatId).execute()!!
             if (user.conversationState != ConversationState.COMPETITION_VINES_REQUESTED) {
                 sendIncorrectStateMessage(user.chatId!!)
                 return@onDataCallbackQuery
@@ -288,11 +288,11 @@ object CreateCompetitionFlow {
             UpdateConversationStateRequest(newUser.chatId, ConversationState.COMPETITION_VINES_REQUESTED, newUser.conversationMetadata).execute()
 
             edit(query.message!!.accessibleMessageOrThrow(), replyMarkup = InlineMarkupPaginationUtils.generateInlineMarkup(newUser))
-            if(newConversationMetadata.selectedVines.isEmpty())  edit(query.user.id, query.message!!.messageId, "Всі попередньо додані вина були видалені. Введіть вина, які будуть оцінюватися на конкурсі у форматі \"<Назва виробник> : <Назва вина>\" (без кавичок). Можна вводити декілька вин за один раз -- кожне в новому рядку.\n" +
+            if(newConversationMetadata.selectedVines.isEmpty())  edit(query.user.id, query.message!!.messageId, "Всі попередньо додані вина були видалені. Введіть вина, які будуть оцінюватися на конкурсі у форматі \"<Назва виробник> : <Назва вина> : <Sample Code>\" (без кавичок). Можна вводити декілька вин за один раз -- кожне в новому рядку.\n" +
                     "Наприклад:\n" +
-                    "Винороб 1 : Вино 1\n" +
-                    "Винороб 2 : Вино 2\n" +
-                    "Винороб 3 : Вино 3\n")
+                    "Винороб 1 : Вино 1 : Sample Code 1\n" +
+                    "Винороб 2 : Вино 2 : Sample Code 2\n" +
+                    "Винороб 3 : Вино 3 : Sample Code 3\n",)
         } catch (e: Exception) { e.printStackTrace(); send(query.user.id, CommonStrings.ERROR_UNKNOWN) } }
 
         onDataCallbackQuery { query -> try {
@@ -312,7 +312,7 @@ object CreateCompetitionFlow {
                 competitionVinesSelectionRequestMetadata.vineType,
                 competitionVinesSelectionRequestMetadata.selectedExperts.map { GetUserRequest(it).execute()!! },
                 competitionVinesSelectionRequestMetadata.selectedCategories.map { Category(it) },
-                competitionVinesSelectionRequestMetadata.selectedVines.map { Vine(it.makerPhoneNumber, it.name, competitionVinesSelectionRequestMetadata.vineType) }
+                competitionVinesSelectionRequestMetadata.selectedVines.map { Vine(it.makerPhoneNumber, it.name, competitionVinesSelectionRequestMetadata.vineType, it.sampleCode) }
             )
         } catch (e: Exception) { e.printStackTrace(); send(query.user.id, CommonStrings.ERROR_UNKNOWN) } }
     }
@@ -341,11 +341,11 @@ object CreateCompetitionFlow {
             COMPETITION_VINE_TYPE_REQUESTED_METADATA(name).toConversationMetadata()
         ).execute()
 
-        reply(message, "Будь ласка, оберіть тип вина на конкурсі \"$name\".", replyMarkup = InlineKeyboardMarkup(
+        reply(message, "Будь ласка, оберіть тип вина на конкурсі \"${name.value}\".", replyMarkup = InlineKeyboardMarkup(
             matrix {
                 row {
-                    +CallbackDataInlineKeyboardButton("🍷 Червоне вино", "red_vine")
-                    +CallbackDataInlineKeyboardButton("🍾 Біле вино", "white_vine")
+                    +CallbackDataInlineKeyboardButton("🍷 Червоне вино", "red_vine_type")
+                    +CallbackDataInlineKeyboardButton("🍾 Біле вино", "white_vine_type")
                 }
             })
         )
@@ -400,16 +400,31 @@ object CreateCompetitionFlow {
         ).execute()
 
         val categories = listOf(
-            Category(Category.Name("Overall judgement")),
             Category(Category.Name("Limpidity")),
+            Category(Category.Name("Colour")),
             Category(Category.Name("Aspect other than limpidity")),
             Category(Category.Name("Effervescence")),
-            Category(Category.Name("Genuineness")),
-            Category(Category.Name("Nose Positive intensity")),
-            Category(Category.Name("Quality Genuineness")),
-            Category(Category.Name("Taste Positive intensity")),
-            Category(Category.Name("Harmonious persistence")),
-            Category(Category.Name("Taste Quality")),
+            Category(Category.Name("Genuineness (Still wines)")),
+            Category(Category.Name("Genuineness (Sparkling wines)")),
+            Category(Category.Name("Nose Typicality")),
+            Category(Category.Name("Nose Positive intensity (Still wines)")),
+            Category(Category.Name("Nose Positive intensity (Sparkling wines)")),
+            Category(Category.Name("Nose Positive intensity (Spiritous beverages)")),
+            Category(Category.Name("Nose Quality (Still wines)")),
+            Category(Category.Name("Nose Quality (Sparkling wines)")),
+            Category(Category.Name("Nose Quality (Spiritous beverages)")),
+            Category(Category.Name("Taste Typicality")),
+            Category(Category.Name("Taste Positive intensity (Still wines)")),
+            Category(Category.Name("Taste Positive intensity (Sparkling wines)")),
+            Category(Category.Name("Harmonious persistence (Still wines)")),
+            Category(Category.Name("Harmonious persistence (Sparkling wines)")),
+            Category(Category.Name("Harmonious persistence (Spiritous beverages)")),
+            Category(Category.Name("Taste Quality (Still wines)")),
+            Category(Category.Name("Taste Quality (Sparkling wines)")),
+            Category(Category.Name("Taste Quality (Spiritous beverages)")),
+            Category(Category.Name("Overall judgement (Still wines)")),
+            Category(Category.Name("Overall judgement (Sparkling wines)")),
+            Category(Category.Name("Overall judgement (Spiritous beverages)")),
         )
 
         val newUser = user.copy(
@@ -417,7 +432,7 @@ object CreateCompetitionFlow {
                 it.name.value,
                 it.name.value + "_category"
             )) },
-            inlineMarkupPagination = Pagination(0, 2)
+            inlineMarkupPagination = Pagination(0, 12)
         )
 
         UpdateInlineMarkupStateRequest(
@@ -455,11 +470,11 @@ object CreateCompetitionFlow {
 
         send(
             user.chatId.toChatId(),
-            "Введіть вина, які будуть оцінюватися на конкурсі у форматі \"<Назва виробник> : <Назва вина>\" (без кавичок). Можна вводити декілька вин за один раз -- кожне в новому рядку.\n" +
+            "Введіть вина, які будуть оцінюватися на конкурсі у форматі \"<Назва виробник> : <Назва вина> : <Sample Code>\" (без кавичок). Можна вводити декілька вин за один раз -- кожне в новому рядку.\n" +
                     "Наприклад:\n" +
-                    "Винороб 1 : Вино 1\n" +
-                    "Винороб 2 : Вино 2\n" +
-                    "Винороб 3 : Вино 3\n",
+                    "Винороб 1 : Вино 1 : Sample Code 1\n" +
+                    "Винороб 2 : Вино 2 : Sample Code 2\n" +
+                    "Винороб 3 : Вино 3 : Sample Code 3\n",
             replyMarkup = MenuUtils.EMPTY_INLINE_MENU
         )
     }
@@ -473,7 +488,7 @@ object CreateCompetitionFlow {
         val newVines = message.text!!.split("\n").mapNotNull { vineString ->
             if (vineString.isBlank()) return@mapNotNull null
             val parts = vineString.split(":").map { it.trim() }
-            if (parts.size != 2) {
+            if (parts.size != 3) {
                 unprocessedVines.add("Неправильний формат -- $vineString")
                 return@mapNotNull null
             }
@@ -485,7 +500,7 @@ object CreateCompetitionFlow {
                     unprocessedVines.add("Не знайдено винороба з іменем ${parts[0]} -- $vineString")
                     return@mapNotNull null
                 }
-                val newVine = Vine(phoneNumber, Vine.Name(parts[1]), metadata.vineType)
+                val newVine = Vine(phoneNumber, Vine.Name(parts[1]), metadata.vineType, Vine.SampleCode(parts[2]))
                 if(metadata.selectedVines.contains(newVine.id)) {
                     unprocessedVines.add("Це вино вже додано -- $vineString")
                     return@mapNotNull null
@@ -525,8 +540,8 @@ object CreateCompetitionFlow {
         ).execute()
 
         reply(message,
-            if(unprocessedVines.isNotEmpty()) "Наступні вина не були додані:\n" +
-                unprocessedVines.joinToString("\n") else "" +
+            (if(unprocessedVines.isNotEmpty()) "Наступні вина не були додані:\n" +
+                unprocessedVines.joinToString("\n") else "") +
                 "Нижче розміщені всі успішно додані вина. Ви можете видалити вино, натиснувши на нього. Якщо ви хочете завершити вибір вин, надішліть \"✅ Завершити вибір вин\".",
             replyMarkup = InlineMarkupPaginationUtils.generateInlineMarkup(newUser)
         )
@@ -561,14 +576,13 @@ object CreateCompetitionFlow {
         competitionRepository.create(competition)
 
         UpdateConversationStateRequest(user.chatId!!, ConversationState.INITIAL).execute()
-        UpdateInlineMarkupStateRequest(user.chatId, emptyList(), Pagination(0, 2)).execute()
 
         send(user.chatId.toChatId(), "Конкурс ${competition.name.value} успішно створено!")
 
         newSuspendedTransaction {
             UsersTable.selectAll().forEach { row ->
                 try {
-                    tryWithRetry(3, 2000) {
+                    tryWithRetry(3, 1000) {
                         val rowUser = UsersTable.fromRow(row)
                         if(rowUser.chatId != null) {
                             UpdateConversationStateRequest(rowUser.chatId, ConversationState.INITIAL).execute()

@@ -9,7 +9,10 @@ import presentation.flows.AddUserFlow.setupAddUserFlow
 import presentation.flows.AssessFlow.setupAssessFlow
 import presentation.flows.BackFlow.setupBackButtonFlow
 import presentation.flows.CreateCompetitionFlow.setupCreateCompetitionFlow
+import presentation.flows.EndCompetitionFlow.setupEndCompetitionFlow
 import presentation.flows.GetCompetitionResultsFlow.setupGetCompetitionResultsFlow
+import presentation.flows.MyMarksFlow.setupMyMarksFlow
+import presentation.flows.PreviewResultsFlow.setupPreviewResultsFlow
 
 object TelegramBot {
     suspend fun runTelegramBot() {
@@ -25,6 +28,9 @@ object TelegramBot {
             setupGetCompetitionResultsFlow()
             setupCreateCompetitionFlow()
             setupAssessFlow()
+            setupMyMarksFlow()
+            setupPreviewResultsFlow()
+            setupEndCompetitionFlow()
         }.join()
     }
 }

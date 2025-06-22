@@ -1,9 +1,6 @@
 package infrastructure.persistence.repositories
 
-import domain.model.entity.Category
-import domain.model.entity.User
-import domain.model.entity.Vine
-import domain.model.entity.VineAssessment
+import domain.model.entity.*
 import domain.ports.repositories.VineAssessmentRepository
 import eth.likespro.atomarix.Atom
 import eth.likespro.atomarix.adapters.AtomarixExposedAdapter
@@ -25,11 +22,13 @@ class VineAssessmentRepositoryImpl: VineAssessmentRepository {
 
     override suspend fun filter(
         atom: Atom,
+        competitionId: Competition.Id?,
         from: User.PhoneNumber?,
         to: Vine.Id?,
         category: Category.Name?
     ): List<VineAssessment> = AtomarixExposedAdapter.runWithAdapter(atom) {
         VineAssessmentsTable.selectAll()
+            .let { if(competitionId != null) it.andWhere { VineAssessmentsTable.competitionId eq competitionId.value } else it }
             .let { if(from != null) it.andWhere { VineAssessmentsTable.from eq from.value } else it }
             .let { if(to != null) it.andWhere { VineAssessmentsTable.to eq to.encodeObject() } else it }
             .let { if(category != null) it.andWhere { VineAssessmentsTable.category eq category.value } else it }

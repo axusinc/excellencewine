@@ -26,8 +26,8 @@ data class Category(
         override fun throwIfInvalid(): Name = this.also {
             if (value.isBlank())
                 throw domain.model.entity.User.Name.IsInvalidException("Name cannot be blank")
-            if (value.length > 28)
-                throw domain.model.entity.User.Name.IsInvalidException("Name cannot be longer than 28 characters")
+//            if (value.length > 28)
+//                throw domain.model.entity.User.Name.IsInvalidException("Name cannot be longer than 28 characters")
         }
     }
 }

@@ -8,6 +8,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class VineAssessment(
+    val competitionId: Competition.Id,
     val from: User.PhoneNumber,
     val to: Vine.Id,
     val category: Category.Name,

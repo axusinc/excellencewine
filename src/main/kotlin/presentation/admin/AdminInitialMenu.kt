@@ -29,6 +29,7 @@ fun generateAdminCompetitionActiveMenu() = ReplyKeyboardMarkup(
         ),
         listOf(
             SimpleKeyboardButton(CommonStrings.ASSESS),
+            SimpleKeyboardButton(CommonStrings.MY_MARKS),
             SimpleKeyboardButton(CommonStrings.PREVIEW_RESULTS),
             SimpleKeyboardButton(CommonStrings.END_COMPETITION),
         )

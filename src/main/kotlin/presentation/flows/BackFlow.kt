@@ -65,6 +65,8 @@ object BackFlow {
             requestCompetitionCategoryPick(user, metadata.vineId)
         }
 
+        ConversationState.END_COMPETITION_REQUESTED -> showMainScreen(user, message)
+
         else -> reply(message, "Неможливо повернутися назад з цього стану.")
     } }
 }

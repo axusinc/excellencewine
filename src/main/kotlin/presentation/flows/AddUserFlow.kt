@@ -87,7 +87,7 @@ object AddUserFlow {
             val requestUserNameMetadata = user.conversationMetadata.value.decodeObject<USER_NAME_REQUESTED_METADATA>()
 
             val name = try {
-                User.Name(message.content.text)
+                User.Name(message.content.text.trim())
             } catch (_: User.Name.IsInvalidException) {
                 reply(message, "Будь ласка, надішліть коректне ім'я нового користувача (не більше ніж 28 символів).")
                 return@onText

@@ -10,21 +10,10 @@ data class Vine(
     val makerPhoneNumber: User.PhoneNumber,
     val name: Name,
     val type: Type,
-): Entity<Vine.Id> {
-    override val id: Id
-        get() = Id(
-            makerPhoneNumber = makerPhoneNumber,
-            name = name
-        )
-
-    @Serializable
-    data class Id(
-        val makerPhoneNumber: User.PhoneNumber,
-        val name: Name
-    ): Value {
-        constructor(id: String): this(User.PhoneNumber(id.split(":")[0]), Name(id.split(":")[1]))
-        override fun toString(): String = "${makerPhoneNumber.value}:${name.value}"
-    }
+    val sampleCode: SampleCode,
+): Entity<Vine.SampleCode> {
+    override val id: SampleCode
+        get() = sampleCode
 
     @Serializable
     data class Name(
@@ -39,8 +28,24 @@ data class Vine(
         override fun throwIfInvalid(): Name = this.also {
             if (value.isBlank())
                 throw IsInvalidException("Vine Name cannot be blank")
-            if (value.length > 28)
-                throw IsInvalidException("Vine Name cannot be longer than 28 characters")
+            if (value.length > 40)
+                throw IsInvalidException("Vine Name cannot be longer than 40 characters")
+        }
+    }
+
+    @Serializable
+    data class SampleCode(
+        val value: String
+    ): Value, Validatable<SampleCode> {
+        class IsInvalidException(override val message: String): Exception()
+
+        init {
+            throwIfInvalid()
+        }
+
+        override fun throwIfInvalid(): SampleCode = this.also {
+            if (value.isBlank())
+                throw IsInvalidException("Vine Sample Code cannot be blank")
         }
     }
 
