@@ -24,8 +24,8 @@ import presentation.CommonStrings
 import presentation.FlowUtils.sendIncorrectStateMessage
 import presentation.InlineMarkupPaginationUtils
 import presentation.MenuUtils
+import presentation.ReportUtils.computeMedal
 import presentation.ReportUtils.generateReport
-import presentation.flows.AssessFlow.requestCompetitionCategoryPick
 
 object GetCompetitionResultsFlow {
     suspend fun <BC : BehaviourContext> BC.setupGetCompetitionResultsFlow() {
@@ -72,15 +72,15 @@ object GetCompetitionResultsFlow {
         val competitions = GetCompetitionsRequest().execute()
 
         val newUser = user.copy(
-            currentInlineMarkupButtons = competitions.map { listOf(CallbackDataInlineKeyboardButton(it.name.value, it.id.value + "_competition")) },
-            inlineMarkupPagination = Pagination(0, 2)
+            currentInlineMarkupButtons = competitions.map { listOf(CallbackDataInlineKeyboardButton((if(it.vineType == Vine.Type.RED) "🍷" else "🍾") + " " + it.name.value, it.id.value + "_competition")) },
+            inlineMarkupPagination = Pagination(0, 12)
         )
 
         UpdateInlineMarkupStateRequest(
             user.chatId,
             newUser.currentInlineMarkupButtons,
             newUser.inlineMarkupPagination
-        )
+        ).execute()
 
         reply(
             message,
@@ -94,15 +94,21 @@ object GetCompetitionResultsFlow {
         val competition = competitionRepository.findById(competitionId)!!
         val assessmentsRepository: VineAssessmentRepository by inject(VineAssessmentRepository::class.java)
         val assessments = assessmentsRepository.filter(competitionId = competition.id)
-        val reportFile = generateReport(competition, assessments, "report-")
+        val report = generateReport(competition, assessments, "report-")
 
         val activeCompetition = GetActiveCompetitionRequest().execute()
 
-        sendDocument(user.chatId!!.toChatId(), InputFile.fromFile(reportFile), text = "Таблиця з результатами конкурсу ${competition.name.value} прикріплена нижче.", replyMarkup = MenuUtils.generateMenu(ConversationState.INITIAL, user.role, activeCompetition != null))
+        sendDocument(user.chatId!!.toChatId(), InputFile.fromFile(report.first), text = "Таблиця з результатами конкурсу ${competition.name.value} прикріплена нижче.\n" +
+                "Здобуті місця:\n" +
+                report.second.mapNotNull { computeMedal(it.value)?.let { medal ->
+                    "$medal: ${it.key.value} (${it.value})"
+                } }.sorted().joinToString("\n"), replyMarkup = MenuUtils.generateMenu(ConversationState.INITIAL, user.role, activeCompetition != null))
 
         UpdateConversationStateRequest(
             user.chatId,
             ConversationState.INITIAL
         ).execute()
+
+        report.first.delete()
     }
 }

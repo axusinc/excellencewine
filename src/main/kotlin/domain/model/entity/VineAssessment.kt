@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 data class VineAssessment(
     val competitionId: Competition.Id,
     val from: User.PhoneNumber,
-    val to: Vine.Id,
+    val to: Vine.SampleCode,
     val category: Category.Name,
     val mark: Int
 ) : Entity<VineAssessment.Id>, Validatable<VineAssessment> {

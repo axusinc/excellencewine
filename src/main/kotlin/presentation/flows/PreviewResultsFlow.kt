@@ -44,14 +44,14 @@ object PreviewResultsFlow {
         val vineAssessmentRepository: VineAssessmentRepository by inject(VineAssessmentRepository::class.java)
         val assessments = vineAssessmentRepository.filter(competitionId = activeCompetition.id)
 
-        val reportFile = generateReport(activeCompetition, assessments, "preview-")
+        val report = generateReport(activeCompetition, assessments, "preview-")
 
         UpdateConversationStateRequest(
             user.chatId!!,
             ConversationState.INITIAL
         ).execute()
 
-        sendDocument(user.chatId.toChatId(), InputFile.fromFile(reportFile), text = "Оцінки конкурсу ${activeCompetition.name.value} у форматі Microsoft Excel.", replyMarkup = MenuUtils.generateMenu(ConversationState.INITIAL, user.role, true))
-        reportFile.delete()
+        sendDocument(user.chatId.toChatId(), InputFile.fromFile(report.first), text = "Оцінки конкурсу ${activeCompetition.name.value} у форматі Microsoft Excel.", replyMarkup = MenuUtils.generateMenu(ConversationState.INITIAL, user.role, true))
+        report.first.delete()
     }
 }

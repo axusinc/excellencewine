@@ -7,6 +7,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.filters.CommonMessageFilterIncludeText
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onText
+import dev.inmo.tgbotapi.extensions.utils.formatting.createMarkdownText
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.CallbackDataInlineKeyboardButton
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
 import dev.inmo.tgbotapi.types.message.abstracts.AccessibleMessage
@@ -27,6 +28,7 @@ import presentation.CommonStrings
 import presentation.FlowUtils.sendIncorrectStateMessage
 import presentation.InlineMarkupPaginationUtils
 import presentation.MenuUtils
+import presentation.flows.MainScreenFlow.showMainScreen
 
 object AssessFlow {
     suspend fun <BC : BehaviourContext> BC.setupAssessFlow() {
@@ -55,7 +57,7 @@ object AssessFlow {
                 return@onDataCallbackQuery
             }
 
-            val vineId = Vine.Id(query.data.split("_").first())
+            val vineId = Vine.SampleCode(query.data.split("_").first())
 
             requestCompetitionCategoryPick(user, vineId)
         } catch (e: Exception) { e.printStackTrace(); send(query.user.id, CommonStrings.ERROR_UNKNOWN) } }
@@ -110,10 +112,10 @@ object AssessFlow {
             currentInlineMarkupButtons = vines.map { listOf(
                 CallbackDataInlineKeyboardButton(
                 it.name.value,
-                it.id.toString() + "_vine_pick"
+                it.id.value + "_vine_pick"
             )
             ) },
-            inlineMarkupPagination = Pagination(0, 2)
+            inlineMarkupPagination = Pagination(0, 12)
         )
 
         UpdateInlineMarkupStateRequest(
@@ -130,16 +132,18 @@ object AssessFlow {
     }
 
     data class COMPETITION_CATEGORY_PICK_REQUESTED_METADATA(
-        val vine: Vine.Id,
+        val vine: Vine.SampleCode,
     )
-    suspend fun <BC : BehaviourContext> BC.requestCompetitionCategoryPick(user: User, vineId: Vine.Id) {
+    suspend fun <BC : BehaviourContext> BC.requestCompetitionCategoryPick(user: User, vineId: Vine.SampleCode) {
+        val activeCompetition = GetActiveCompetitionRequest().execute()!!
+        val vine = activeCompetition.vines.find { it.id == vineId }!!
+
         UpdateConversationStateRequest(
             user.chatId!!,
             ConversationState.COMPETITION_CATEGORY_PICK_REQUESTED,
-            COMPETITION_CATEGORY_PICK_REQUESTED_METADATA(vineId).toConversationMetadata()
+            COMPETITION_CATEGORY_PICK_REQUESTED_METADATA(vine.id).toConversationMetadata()
         ).execute()
 
-        val activeCompetition = GetActiveCompetitionRequest().execute()!!
         val categories = activeCompetition.categories
 
         val newUser = user.copy(
@@ -149,7 +153,7 @@ object AssessFlow {
                     it.id.value + "_category_pick"
                 )
             ) },
-            inlineMarkupPagination = Pagination(0, 2)
+            inlineMarkupPagination = Pagination(0, 12)
         )
 
         UpdateInlineMarkupStateRequest(
@@ -160,23 +164,24 @@ object AssessFlow {
 
         send(
             user.chatId.toChatId(),
-            "Виберіть категорію для оцінки вина ${vineId.name.value} нижче.",
+            "Виберіть категорію для оцінки вина **${vine.sampleCode.value}** нижче.",
             replyMarkup = InlineMarkupPaginationUtils.generateInlineMarkup(newUser)
         )
     }
 
     data class COMPETITION_VINE_MARK_REQUESTED_METADATA(
-        val vineId: Vine.Id,
+        val vineId: Vine.SampleCode,
         val category: Category,
     )
-    suspend fun <BC : BehaviourContext> BC.requestCompetitionVineMarkPick(user: User, vineId: Vine.Id, category: Category) {
+    suspend fun <BC : BehaviourContext> BC.requestCompetitionVineMarkPick(user: User, vineId: Vine.SampleCode, category: Category) {
+        val activeCompetition = GetActiveCompetitionRequest().execute()!!
+        val vine = activeCompetition.vines.find { it.id == vineId }!!
+
         UpdateConversationStateRequest(
             user.chatId!!,
             ConversationState.COMPETITION_VINE_MARK_REQUESTED,
-            COMPETITION_VINE_MARK_REQUESTED_METADATA(vineId, category).toConversationMetadata()
+            COMPETITION_VINE_MARK_REQUESTED_METADATA(vine.id, category).toConversationMetadata()
         ).execute()
-
-        val activeCompetition = GetActiveCompetitionRequest().execute()!!
         val marks = (1..5)
 
         val inlineMarkup = InlineKeyboardMarkup(matrix {
@@ -187,25 +192,39 @@ object AssessFlow {
 
         send(
             user.chatId.toChatId(),
-            "Виберіть оцінку вина ${vineId.name.value} в категорії ${category.name.value} нижче.",
-            replyMarkup = inlineMarkup
+            text = "Виберіть оцінку вина **${vine.sampleCode.value}** в категорії **${category.name.value}** нижче.",
+            replyMarkup = inlineMarkup,
         )
     }
 
-    suspend fun <BC : BehaviourContext> BC.assessVine(user: User, vineId: Vine.Id, category: Category, mark: Int) {
+    suspend fun <BC : BehaviourContext> BC.assessVine(user: User, vineId: Vine.SampleCode, category: Category, mark: Int) {
         val activeCompetition = GetActiveCompetitionRequest().execute()!!
+        val vine = activeCompetition.vines.find { it.id == vineId }!!
 
         val vineAssessmentRepository: VineAssessmentRepository by inject(VineAssessmentRepository::class.java)
         vineAssessmentRepository.upsert(VineAssessment(
             competitionId = activeCompetition.id,
             from = user.id,
-            to = vineId,
+            to = vine.id,
             category = category.name,
             mark = mark
         ))
 
-        send(user.chatId!!.toChatId(), "Ви успішно оцінили вино ${vineId.name.value} в категорії ${category.name.value} на $mark балів.")
+        send(user.chatId!!.toChatId(), "Ви успішно оцінили вино ${vine.sampleCode.value} в категорії **${category.name.value}** на $mark балів.")
 
-        requestCompetitionCategoryPick(user, vineId)
+        val index = activeCompetition.categories.indexOf(category)
+        if(index < activeCompetition.categories.size - 1) requestCompetitionVineMarkPick(user, vine.id, activeCompetition.categories[index + 1])
+        else {
+            UpdateConversationStateRequest(
+                user.chatId,
+                ConversationState.INITIAL
+            ).execute()
+
+            send(
+                user.chatId.toChatId(),
+                "Ви успішно оцінили вино ${vine.sampleCode.value} в деяких категоріях.",
+                replyMarkup = MenuUtils.generateMenu(ConversationState.INITIAL, user.role, true)
+            )
+        }
     }
 }

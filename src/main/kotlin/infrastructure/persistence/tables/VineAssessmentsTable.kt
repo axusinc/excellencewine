@@ -20,7 +20,7 @@ object VineAssessmentsTable: Table("vine_assessments") {
     fun fromRow(row: ResultRow) = VineAssessment(
         competitionId = Competition.Id(row[competitionId]),
         from = User.PhoneNumber(row[from]),
-        to = row[to].decodeObject<Vine.Id>(),
+        to = Vine.SampleCode(row[to]),
         category = Category.Name(row[category]),
         mark = row[mark]
     )
@@ -29,7 +29,7 @@ object VineAssessmentsTable: Table("vine_assessments") {
         to[id] = assessment.id.value // id is a composite of from, to, and category
         to[competitionId] = assessment.competitionId.value
         to[from] = assessment.from.value
-        to[VineAssessmentsTable.to] = assessment.to.encodeObject()
+        to[VineAssessmentsTable.to] = assessment.to.value
         to[category] = assessment.category.value
         to[mark] = assessment.mark
     }

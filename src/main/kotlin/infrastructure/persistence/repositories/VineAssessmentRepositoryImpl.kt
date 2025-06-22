@@ -24,7 +24,7 @@ class VineAssessmentRepositoryImpl: VineAssessmentRepository {
         atom: Atom,
         competitionId: Competition.Id?,
         from: User.PhoneNumber?,
-        to: Vine.Id?,
+        to: Vine.SampleCode?,
         category: Category.Name?
     ): List<VineAssessment> = AtomarixExposedAdapter.runWithAdapter(atom) {
         VineAssessmentsTable.selectAll()

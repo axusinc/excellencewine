@@ -5,8 +5,12 @@ import domain.model.entity.User
 import domain.model.value.ConversationState
 import presentation.admin.generateAdminCompetitionActiveMenu
 import presentation.admin.generateAdminMenu
+import presentation.expert.generateExpertActiveMenu
+import presentation.expert.generateExpertMenu
 import presentation.headofexperts.generateHeadOfExpertsActiveMenu
 import presentation.headofexperts.generateHeadOfExpertsMenu
+import presentation.vinemaker.generateVineMakerActiveMenu
+import presentation.vinemaker.generateVineMakerMenu
 
 object MenuUtils {
     val EMPTY_INLINE_MENU get() = InlineKeyboardMarkup(emptyList())
@@ -17,7 +21,8 @@ object MenuUtils {
         ConversationState.INITIAL -> { when(role) {
             User.Role.ADMIN -> if(!isCompetitionActive) generateAdminMenu() else generateAdminCompetitionActiveMenu()
             User.Role.HEAD_OF_EXPERTS -> if(!isCompetitionActive) generateHeadOfExpertsMenu() else generateHeadOfExpertsActiveMenu()
-            else -> EMPTY_MENU
+            User.Role.EXPERT -> if(!isCompetitionActive) generateExpertMenu() else generateExpertActiveMenu()
+            User.Role.VINE_MAKER -> if(!isCompetitionActive) generateVineMakerMenu() else generateVineMakerActiveMenu()
         } }
         else -> EMPTY_MENU
     }

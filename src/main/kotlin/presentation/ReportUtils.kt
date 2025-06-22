@@ -1,10 +1,7 @@
 package presentation
 
 import application.usecase.GetUserRequest
-import domain.model.entity.Category
-import domain.model.entity.Competition
-import domain.model.entity.User
-import domain.model.entity.VineAssessment
+import domain.model.entity.*
 import eth.likespro.commons.numeric.NumericUtils.round
 import io.github.evanrupert.excelkt.workbook
 import kotlinx.coroutines.runBlocking
@@ -15,7 +12,8 @@ import java.io.File
 import kotlin.math.absoluteValue
 
 object ReportUtils {
-    fun generateReport(activeCompetition: Competition, assessments: List<VineAssessment>, prefix: String = ""): File {
+    fun generateReport(activeCompetition: Competition, assessments: List<VineAssessment>, prefix: String = ""): Pair<File, Map<Vine.SampleCode, Double>> {
+        val finalScores = mutableMapOf<Vine.SampleCode, Double>()
         val vines = activeCompetition.vines.sortedBy { it.name.value }
         val experts = activeCompetition.experts.sortedBy { it.name.value }
 
@@ -45,8 +43,10 @@ object ReportUtils {
                     val scores = mutableMapOf<User.PhoneNumber, Double>()
                     experts.forEach { expert ->
                         val expertAssessments = assessments.filter { it.to == vine.id && it.from == expert.id }
-                        val avgScore = expertAssessments.runningReduce { acc, vineAssessment -> acc.copy(mark = acc.mark + computeRealMark(vineAssessment)) }.lastOrNull()
-                        if(avgScore != null) scores[expert.id] = avgScore.mark.toDouble() / expertAssessments.size
+                        if(expertAssessments.size == activeCompetition.categories.size) {
+                            val avgScore = expertAssessments.runningReduce { acc, vineAssessment -> acc.copy(mark = acc.mark + computeRealMark(vineAssessment)) }.lastOrNull()
+                            if(avgScore != null) scores[expert.id] = avgScore.mark.toDouble()
+                        }
                     }
                     val averageScore = scores.values.average()
                     val deltas = mutableMapOf<User.PhoneNumber, Double>()
@@ -62,6 +62,7 @@ object ReportUtils {
                         }
                     }
                     val finalScore = finalScoreSum / finalScoreParts
+                    finalScores[vine.id] = finalScore
 
                     row {
                         cell(vine.sampleCode.value)
@@ -84,7 +85,28 @@ object ReportUtils {
                 }
             }
         }.write(tmpFile.path)
-        return tmpFile
+        return tmpFile to finalScores
+    }
+
+    enum class Medal(val emoji: String) {
+        GRAND_PRIX("🏆"),
+        GOLD("🥇"),
+        SILVER("🥈"),
+        BRONZE("🥉"),
+        ;
+        override fun toString(): String = "$emoji "+when(this) {
+            GRAND_PRIX -> "Grand Prix"
+            GOLD -> "Gold"
+            SILVER -> "Silver"
+            BRONZE -> "Bronze"
+        }
+    }
+    fun computeMedal(vineScore: Double): Medal? = when {
+        vineScore >= 96 -> Medal.GRAND_PRIX
+        vineScore >= 88 -> Medal.GOLD
+        vineScore >= 82 -> Medal.SILVER
+        vineScore >= 78 -> Medal.BRONZE
+        else -> null
     }
 
     fun computeRealMark(

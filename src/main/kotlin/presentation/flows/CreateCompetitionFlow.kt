@@ -262,16 +262,17 @@ object CreateCompetitionFlow {
 
             val competitionVinesSelectionRequestedMetadata =
                 user.conversationMetadata.value.decodeObject<COMPETITION_VINES_REQUESTED_METADATA>()
-            val vineId = Vine.Id(query.data.split("_").first())
+            val vineId = Vine.SampleCode(query.data.split("_").first())
 
             val newConversationMetadata = competitionVinesSelectionRequestedMetadata.copy(
-                selectedVines = competitionVinesSelectionRequestedMetadata.selectedVines - vineId
+                selectedVines = competitionVinesSelectionRequestedMetadata.selectedVines -
+                        competitionVinesSelectionRequestedMetadata.selectedVines.find { it.id == vineId }!!
             )
             val newUser = user.copy(
                 conversationMetadata = newConversationMetadata.toConversationMetadata(),
                 currentInlineMarkupButtons = user.currentInlineMarkupButtons.map { row ->
                     row.mapNotNull {
-                        if (it.callbackData.startsWith(vineId.toString() + "_vine" /* after this _selected also can be */)) null // remove the button on click
+                        if (it.callbackData.startsWith(vineId.value + "_vine" /* after this _selected also can be */)) null // remove the button on click
                         else it
                     }
                 }.let {
@@ -370,7 +371,7 @@ object CreateCompetitionFlow {
                         it.name.value,
                         it.id.value + "_expert"
                     )) },
-            inlineMarkupPagination = Pagination(0, 2)
+            inlineMarkupPagination = Pagination(0, 12)
         )
 
         UpdateInlineMarkupStateRequest(
@@ -453,7 +454,7 @@ object CreateCompetitionFlow {
         val vineType: Vine.Type,
         val selectedExperts: List<User.PhoneNumber> = listOf(),
         val selectedCategories: List<Category.Name> = listOf(),
-        val selectedVines: List<Vine.Id> = listOf()
+        val selectedVines: List<Vine> = listOf()
     )
     suspend fun <BC : BehaviourContext> BC.requestCompetitionVines(user: User, name: Competition.Name, vineType: Vine.Type, selectedExperts: List<User.PhoneNumber>, selectedCategories: List<Category.Name>) {
         UpdateConversationStateRequest(
@@ -465,7 +466,7 @@ object CreateCompetitionFlow {
         UpdateInlineMarkupStateRequest(
             user.chatId,
             emptyList(),
-            Pagination(0, 2)
+            Pagination(0, 12)
         ).execute()
 
         send(
@@ -501,7 +502,7 @@ object CreateCompetitionFlow {
                     return@mapNotNull null
                 }
                 val newVine = Vine(phoneNumber, Vine.Name(parts[1]), metadata.vineType, Vine.SampleCode(parts[2]))
-                if(metadata.selectedVines.contains(newVine.id)) {
+                if(metadata.selectedVines.contains(newVine)) {
                     unprocessedVines.add("Це вино вже додано -- $vineString")
                     return@mapNotNull null
                 } else newVine
@@ -511,12 +512,12 @@ object CreateCompetitionFlow {
             }
         }
 
-        val newMetadata = metadata.copy(selectedVines = (metadata.selectedVines + newVines.map { it.id }).distinctBy { it })
+        val newMetadata = metadata.copy(selectedVines = (metadata.selectedVines + newVines).distinctBy { it })
         val newUser = user.copy(
             conversationMetadata = newMetadata.toConversationMetadata(),
             currentInlineMarkupButtons = (user.currentInlineMarkupButtons + newVines.map { listOf(CallbackDataInlineKeyboardButton(
                 it.name.value,
-                it.id.toString() + "_vine"
+                it.id.value + "_vine"
             )) }).map { row ->
                 row.distinctBy { it.callbackData.split("_").first() }
             }.let {

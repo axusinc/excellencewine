@@ -4,7 +4,6 @@ import app.logger
 import application.usecase.GetActiveCompetitionRequest
 import application.usecase.GetUserByChatIdRequest
 import application.usecase.UpdateConversationStateRequest
-import dev.inmo.tgbotapi.extensions.api.delete
 import dev.inmo.tgbotapi.extensions.api.send.media.sendDocument
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.send
@@ -31,6 +30,7 @@ import org.koin.java.KoinJavaComponent.inject
 import presentation.CommonStrings
 import presentation.FlowUtils.sendIncorrectStateMessage
 import presentation.MenuUtils
+import presentation.ReportUtils.computeMedal
 import presentation.ReportUtils.generateReport
 import presentation.RetryUtils.tryWithRetry
 
@@ -101,12 +101,12 @@ object EndCompetitionFlow {
 
         val vineAssessmentRepository: VineAssessmentRepository by inject(VineAssessmentRepository::class.java)
         val assessments = vineAssessmentRepository.filter(competitionId = activeCompetition.id)
-        val reportFile = generateReport(activeCompetition, assessments, "report-")
+        val report = generateReport(activeCompetition, assessments, "report-")
 
         val competitionRepository: CompetitionRepository by inject(CompetitionRepository::class.java)
         competitionRepository.update(activeCompetition.apply { endedAt = Timestamp.now() })!!
 
-        send(user.chatId.toChatId(), "Конкурс ${activeCompetition.name.value} успішно завершено.")
+        send(user.chatId.toChatId(), "Закінчення конкурсу ${activeCompetition.name.value}...")
 
         newSuspendedTransaction {
             UsersTable.selectAll().forEach { row ->
@@ -115,7 +115,11 @@ object EndCompetitionFlow {
                         val rowUser = UsersTable.fromRow(row)
                         if(rowUser.chatId != null) {
                             UpdateConversationStateRequest(rowUser.chatId, ConversationState.INITIAL).execute()
-                            sendDocument(rowUser.chatId.toChatId(), InputFile.fromFile(reportFile), text = "Конкурс ${activeCompetition.name.value} завершено. Таблиця з результатами конкурсу прикріплена нижче.", replyMarkup = MenuUtils.generateMenu(ConversationState.INITIAL, rowUser.role, false))
+                            sendDocument(rowUser.chatId.toChatId(), InputFile.fromFile(report.first), text = "Конкурс ${activeCompetition.name.value} завершено. Таблиця з результатами конкурсу прикріплена вище.\n" +
+                                    "Здобуті місця:\n" +
+                                    report.second.mapNotNull { computeMedal(it.value)?.let { medal ->
+                                        "$medal: ${it.key.value} (${it.value})"
+                                    } }.sorted().joinToString("\n"), replyMarkup = MenuUtils.generateMenu(ConversationState.INITIAL, rowUser.role, false))
                         }
                     }
                 } catch (e: Exception) {
@@ -124,6 +128,6 @@ object EndCompetitionFlow {
                 delay(500)
             }
         }
-        reportFile.delete()
+        report.first.delete()
     }
 }

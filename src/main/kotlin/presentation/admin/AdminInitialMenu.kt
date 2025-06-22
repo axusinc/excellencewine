@@ -28,10 +28,13 @@ fun generateAdminCompetitionActiveMenu() = ReplyKeyboardMarkup(
             SimpleKeyboardButton("Винороби")
         ),
         listOf(
-            SimpleKeyboardButton(CommonStrings.ASSESS),
-            SimpleKeyboardButton(CommonStrings.MY_MARKS),
+//            SimpleKeyboardButton(CommonStrings.ASSESS),
+//            SimpleKeyboardButton(CommonStrings.MY_MARKS),
             SimpleKeyboardButton(CommonStrings.PREVIEW_RESULTS),
             SimpleKeyboardButton(CommonStrings.END_COMPETITION),
+        ),
+        listOf(
+            SimpleKeyboardButton(CommonStrings.COMPETITIONS),
         )
     ),
     resizeKeyboard = true,
