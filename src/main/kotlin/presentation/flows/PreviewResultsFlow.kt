@@ -28,7 +28,7 @@ object PreviewResultsFlow {
             val user = GetUserByChatIdRequest(message.chat.id.chatId).execute()
             if(user?.conversationState != ConversationState.INITIAL)
                 return@onText
-            if (user.role !in listOf(User.Role.ADMIN, User.Role.HEAD_OF_EXPERTS)) {
+            if (user.role !in listOf(User.Role.ADMIN, User.Role.HEAD_OF_EXPERTS, User.Role.VINE_MAKER)) {
                 reply(message, "Ця команда доступна лише Адміністраторам та Керівникам експертів.")
                 return@onText
             }

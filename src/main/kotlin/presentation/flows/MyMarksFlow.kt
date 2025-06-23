@@ -66,7 +66,7 @@ object MyMarksFlow {
                     row {
                         cell(vine.name.value)
                         activeCompetition.categories.forEach { category ->
-                            val mark = assessments.find { it.to == vine.id && it.category == category.name }?.let { computeRealMark(it) }
+                            val mark = assessments.find { it.to == vine.id && it.category == category.name }?.let { computeRealMark(it.category, it.mark) }
                             if(mark != null)
                                 cell(mark.toString(), aquaBackgroundStyle())
                             else

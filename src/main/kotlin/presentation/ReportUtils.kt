@@ -44,7 +44,7 @@ object ReportUtils {
                     experts.forEach { expert ->
                         val expertAssessments = assessments.filter { it.to == vine.id && it.from == expert.id }
                         if(expertAssessments.size == activeCompetition.categories.size) {
-                            val avgScore = expertAssessments.runningReduce { acc, vineAssessment -> acc.copy(mark = acc.mark + computeRealMark(vineAssessment)) }.lastOrNull()
+                            val avgScore = expertAssessments.runningReduce { acc, vineAssessment -> acc.copy(mark = acc.mark + computeRealMark(vineAssessment.category, vineAssessment.mark)) }.lastOrNull()
                             if(avgScore != null) scores[expert.id] = avgScore.mark.toDouble()
                         }
                     }
@@ -110,61 +110,62 @@ object ReportUtils {
     }
 
     fun computeRealMark(
-        assessment: VineAssessment,
-    ): Int = when(assessment.category) {
-        (Category.Name("Limpidity")) -> assessment.mark // Ok
-        (Category.Name("Colour")) -> assessment.mark // Ok
-        (Category.Name("Aspect other than limpidity")) -> assessment.mark * 2 // Ok
-        (Category.Name("Effervescence")) -> assessment.mark * 2 // Ok
-        (Category.Name("Genuineness (Still wines)")) -> assessment.mark + 1 // Ok
-        (Category.Name("Genuineness (Sparkling wines)")) -> assessment.mark + 2 // Ok
-        (Category.Name("Nose Typicality")) -> assessment.mark + 1 // Ok
-        (Category.Name("Nose Positive intensity (Still wines)")) -> when(assessment.mark) { // Ok
+        category: Category.Name,
+        mark: Int,
+    ): Int = when(category) {
+        (Category.Name("Limpidity")) -> mark // Ok
+        (Category.Name("Colour")) -> mark // Ok
+        (Category.Name("Aspect other than limpidity")) -> mark * 2 // Ok
+        (Category.Name("Effervescence")) -> mark * 2 // Ok
+        (Category.Name("Genuineness (Still wines)")) -> mark + 1 // Ok
+        (Category.Name("Genuineness (Sparkling wines)")) -> mark + 2 // Ok
+        (Category.Name("Nose Typicality")) -> mark + 1 // Ok
+        (Category.Name("Nose Positive intensity (Still wines)")) -> when(mark) { // Ok
             1 -> 2
             2 -> 4
             3 -> 6
             4 -> 7
             5 -> 8
-            else -> throw IllegalArgumentException("Unknown mark: ${assessment.mark}")
+            else -> throw IllegalArgumentException("Unknown mark: ${mark}")
         }
-        (Category.Name("Nose Positive intensity (Sparkling wines)")) -> assessment.mark + 1 // Ok
-        (Category.Name("Nose Positive intensity (Spiritous beverages)")) -> (assessment.mark * 2) - 1 // Ok
-        (Category.Name("Nose Quality (Still wines)")) -> (assessment.mark * 2) + 6 // Ok
-        (Category.Name("Nose Quality (Sparkling wines)")) -> (assessment.mark * 2) + 4 // Ok
-        (Category.Name("Nose Quality (Spiritous beverages)")) -> (assessment.mark * 2) + 5 // Ok
-        (Category.Name("Taste Typicality")) -> assessment.mark + 3 // Ok
-        (Category.Name("Taste Positive intensity (Still wines)")) -> when(assessment.mark) { // Ok
+        (Category.Name("Nose Positive intensity (Sparkling wines)")) -> mark + 1 // Ok
+        (Category.Name("Nose Positive intensity (Spiritous beverages)")) -> (mark * 2) - 1 // Ok
+        (Category.Name("Nose Quality (Still wines)")) -> (mark * 2) + 6 // Ok
+        (Category.Name("Nose Quality (Sparkling wines)")) -> (mark * 2) + 4 // Ok
+        (Category.Name("Nose Quality (Spiritous beverages)")) -> (mark * 2) + 5 // Ok
+        (Category.Name("Taste Typicality")) -> mark + 3 // Ok
+        (Category.Name("Taste Positive intensity (Still wines)")) -> when(mark) { // Ok
             1 -> 2
             2 -> 4
             3 -> 6
             4 -> 7
             5 -> 8
-            else -> throw IllegalArgumentException("Unknown mark: ${assessment.mark}")
+            else -> throw IllegalArgumentException("Unknown mark: ${mark}")
         }
-        (Category.Name("Taste Positive intensity (Sparkling wines)")) -> assessment.mark + 2 // Ok
-        (Category.Name("Harmonious persistence (Still wines)")) -> when(assessment.mark) { // Ok
+        (Category.Name("Taste Positive intensity (Sparkling wines)")) -> mark + 2 // Ok
+        (Category.Name("Harmonious persistence (Still wines)")) -> when(mark) { // Ok
             1 -> 2
             2 -> 4
             3 -> 6
             4 -> 7
             5 -> 8
-            else -> throw IllegalArgumentException("Unknown mark: ${assessment.mark}")
+            else -> throw IllegalArgumentException("Unknown mark: ${mark}")
         }
-        (Category.Name("Harmonious persistence (Sparkling wines)")) -> assessment.mark + 2 // Ok
-        (Category.Name("Harmonious persistence (Spiritous beverages)")) -> (assessment.mark * 2) + 2 // Ok
-        (Category.Name("Taste Quality (Still wines)")) -> (assessment.mark * 3) + 7 // Ok
-        (Category.Name("Taste Quality (Sparkling wines)")) -> (assessment.mark * 2) + 4 // Ok
-        (Category.Name("Taste Quality (Spiritous beverages)")) -> when(assessment.mark) { // Ok
+        (Category.Name("Harmonious persistence (Sparkling wines)")) -> mark + 2 // Ok
+        (Category.Name("Harmonious persistence (Spiritous beverages)")) -> (mark * 2) + 2 // Ok
+        (Category.Name("Taste Quality (Still wines)")) -> (mark * 3) + 7 // Ok
+        (Category.Name("Taste Quality (Sparkling wines)")) -> (mark * 2) + 4 // Ok
+        (Category.Name("Taste Quality (Spiritous beverages)")) -> when(mark) { // Ok
             1 -> 6
             2 -> 10
             3 -> 14
             4 -> 18
             5 -> 20
-            else -> throw IllegalArgumentException("Unknown mark: ${assessment.mark}")
+            else -> throw IllegalArgumentException("Unknown mark: ${mark}")
         }
-        (Category.Name("Overall judgement (Still wines)")) -> assessment.mark + 6 // Ok
-        (Category.Name("Overall judgement (Sparkling wines)")) -> assessment.mark + 7 // Ok
-        (Category.Name("Overall judgement (Spiritous beverages)")) -> assessment.mark
-        else -> throw IllegalArgumentException("Unknown category: ${assessment.category.value}")
+        (Category.Name("Overall judgement (Still wines)")) -> mark + 6 // Ok
+        (Category.Name("Overall judgement (Sparkling wines)")) -> mark + 7 // Ok
+        (Category.Name("Overall judgement (Spiritous beverages)")) -> mark
+        else -> throw IllegalArgumentException("Unknown category: ${category.value}")
     }
 }

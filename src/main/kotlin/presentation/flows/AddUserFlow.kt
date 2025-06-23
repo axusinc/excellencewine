@@ -26,6 +26,7 @@ import eth.likespro.commons.reflection.ObjectEncoding.decodeObject
 import presentation.CommonStrings
 import presentation.FlowUtils.sendIncorrectStateMessage
 import presentation.MenuUtils
+import presentation.flows.MainScreenFlow.showMainScreen
 
 // Pls dont look at file's LOC
 object AddUserFlow {
@@ -109,7 +110,7 @@ object AddUserFlow {
                     message,
                     "Користувача ${name.value} з номером ${requestUserNameMetadata.phoneNumber.value} успішно зареєстровано як ${CommonStrings.getRoleReadableName(requestUserNameMetadata.withRole)}."
                 )
-                requestUserPhoneNumber(user, requestUserNameMetadata.withRole)
+                displayUsersList(user, message, requestUserNameMetadata.withRole)
 
             } catch (_: UserAlreadyExistsException) {
                 reply(message, "Користувач з номером ${requestUserNameMetadata.phoneNumber.value} вже зареєстрований.")

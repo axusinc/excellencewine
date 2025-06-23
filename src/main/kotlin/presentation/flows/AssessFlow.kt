@@ -28,6 +28,7 @@ import presentation.CommonStrings
 import presentation.FlowUtils.sendIncorrectStateMessage
 import presentation.InlineMarkupPaginationUtils
 import presentation.MenuUtils
+import presentation.ReportUtils.computeRealMark
 import presentation.flows.MainScreenFlow.showMainScreen
 
 object AssessFlow {
@@ -111,7 +112,7 @@ object AssessFlow {
         val newUser = user.copy(
             currentInlineMarkupButtons = vines.map { listOf(
                 CallbackDataInlineKeyboardButton(
-                it.name.value,
+                it.sampleCode.value,
                 it.id.value + "_vine_pick"
             )
             ) },
@@ -186,7 +187,7 @@ object AssessFlow {
 
         val inlineMarkup = InlineKeyboardMarkup(matrix {
             row { marks.forEach { mark ->
-                add(CallbackDataInlineKeyboardButton(mark.toString(), mark.toString() + "_mark"))
+                add(CallbackDataInlineKeyboardButton(computeRealMark(category.name, mark).toString(), mark.toString() + "_mark"))
             } }
         })
 
