@@ -51,7 +51,7 @@ object MyMarksFlow {
         val vineAssessmentRepository: VineAssessmentRepository by inject(VineAssessmentRepository::class.java)
         val activeCompetition = runBlocking { GetActiveCompetitionRequest().execute()!! }
         val assessments = runBlocking { vineAssessmentRepository.filter(competitionId = activeCompetition.id, from = user.id) }
-        val vines = activeCompetition.vines.sortedBy { it.name.value }
+        val vines = activeCompetition.vines.sortedBy { it.sampleCode.value }
 
         val tmpFile = File("${activeCompetition.name.value}${user.id.value}-report.xlsx")
         workbook {
@@ -60,18 +60,22 @@ object MyMarksFlow {
                 row{
                     cell("Вино")
                     activeCompetition.categories.forEach { category -> cell(category.name.value) }
+                    cell("Сумарна оцінка")
                 }
 
                 vines.forEach { vine ->
                     row {
-                        cell(vine.name.value)
+                        cell(vine.name?.value ?: "")
+                        var sum = 0
                         activeCompetition.categories.forEach { category ->
                             val mark = assessments.find { it.to == vine.id && it.category == category.name }?.let { computeRealMark(it.category, it.mark) }
-                            if(mark != null)
+                            if(mark != null) {
                                 cell(mark.toString(), aquaBackgroundStyle())
-                            else
+                                sum += mark
+                            } else
                                 cell("Немає оцінки", redBackgroundStyle())
                         }
+                        cell(sum)
                     }
                 }
             }

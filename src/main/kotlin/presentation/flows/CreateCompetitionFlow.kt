@@ -161,11 +161,18 @@ object CreateCompetitionFlow {
             }
 
             val competitionExpertsSelectionRequestMetadata = user.conversationMetadata.value.decodeObject<COMPETITION_EXPERTS_SELECTION_REQUESTED_METADATA>()
-            requestCompetitionCategories(
+//            requestCompetitionCategories(
+//                user,
+//                competitionExpertsSelectionRequestMetadata.name,
+//                competitionExpertsSelectionRequestMetadata.vineType,
+//                competitionExpertsSelectionRequestMetadata.selectedExperts
+//            )
+            requestCompetitionVines(
                 user,
                 competitionExpertsSelectionRequestMetadata.name,
                 competitionExpertsSelectionRequestMetadata.vineType,
-                competitionExpertsSelectionRequestMetadata.selectedExperts
+                competitionExpertsSelectionRequestMetadata.selectedExperts,
+                emptyList()
             )
         } catch (e: Exception) { e.printStackTrace(); send(query.user.id, CommonStrings.ERROR_UNKNOWN) } }
 
@@ -289,11 +296,11 @@ object CreateCompetitionFlow {
             UpdateConversationStateRequest(newUser.chatId, ConversationState.COMPETITION_VINES_REQUESTED, newUser.conversationMetadata).execute()
 
             edit(query.message!!.accessibleMessageOrThrow(), replyMarkup = InlineMarkupPaginationUtils.generateInlineMarkup(newUser))
-            if(newConversationMetadata.selectedVines.isEmpty())  edit(query.user.id, query.message!!.messageId, "Всі попередньо додані вина були видалені. Введіть вина, які будуть оцінюватися на конкурсі у форматі \"<Назва виробник> : <Назва вина> : <Sample Code>\" (без кавичок). Можна вводити декілька вин за один раз -- кожне в новому рядку.\n" +
+            if(newConversationMetadata.selectedVines.isEmpty())  edit(query.user.id, query.message!!.messageId, "Всі попередньо додані вина були видалені. Введіть вина, які будуть оцінюватися на конкурсі у форматі \"<Sample Code> : <Vine Type>\" (без кавичок). Vine Type може бути \"STILL\", \"SPARKLING\" та \"SPIRITOUS\". Можна вводити декілька вин за один раз -- кожне в новому рядку.\n" +
                     "Наприклад:\n" +
-                    "Винороб 1 : Вино 1 : Sample Code 1\n" +
-                    "Винороб 2 : Вино 2 : Sample Code 2\n" +
-                    "Винороб 3 : Вино 3 : Sample Code 3\n",)
+                    "Sample Code 1 : STILL\n" +
+                    "Sample Code 2 : SPARKLING\n" +
+                    "Sample Code 3 : SPIRITOUS\n",)
         } catch (e: Exception) { e.printStackTrace(); send(query.user.id, CommonStrings.ERROR_UNKNOWN) } }
 
         onDataCallbackQuery { query -> try {
@@ -313,7 +320,7 @@ object CreateCompetitionFlow {
                 competitionVinesSelectionRequestMetadata.vineType,
                 competitionVinesSelectionRequestMetadata.selectedExperts.map { GetUserRequest(it).execute()!! },
                 competitionVinesSelectionRequestMetadata.selectedCategories.map { Category(it) },
-                competitionVinesSelectionRequestMetadata.selectedVines.map { Vine(it.makerPhoneNumber, it.name, competitionVinesSelectionRequestMetadata.vineType, it.sampleCode) }
+                competitionVinesSelectionRequestMetadata.selectedVines
             )
         } catch (e: Exception) { e.printStackTrace(); send(query.user.id, CommonStrings.ERROR_UNKNOWN) } }
     }
@@ -471,11 +478,11 @@ object CreateCompetitionFlow {
 
         send(
             user.chatId.toChatId(),
-            "Введіть вина, які будуть оцінюватися на конкурсі у форматі \"<Назва виробник> : <Назва вина> : <Sample Code>\" (без кавичок). Можна вводити декілька вин за один раз -- кожне в новому рядку.\n" +
+            "Введіть вина, які будуть оцінюватися на конкурсі у форматі \"<Sample Code> : <Vine Type>\" (без кавичок). Vine Type може бути \"STILL\", \"SPARKLING\" та \"SPIRITOUS\". Можна вводити декілька вин за один раз -- кожне в новому рядку.\n" +
                     "Наприклад:\n" +
-                    "Винороб 1 : Вино 1 : Sample Code 1\n" +
-                    "Винороб 2 : Вино 2 : Sample Code 2\n" +
-                    "Винороб 3 : Вино 3 : Sample Code 3\n",
+                    "Sample Code 1 : STILL\n" +
+                    "Sample Code 2 : SPARKLING\n" +
+                    "Sample Code 3 : SPIRITOUS\n",
             replyMarkup = MenuUtils.EMPTY_INLINE_MENU
         )
     }
@@ -489,19 +496,22 @@ object CreateCompetitionFlow {
         val newVines = message.text!!.split("\n").mapNotNull { vineString ->
             if (vineString.isBlank()) return@mapNotNull null
             val parts = vineString.split(":").map { it.trim() }
-            if (parts.size != 3) {
+            if (parts.size != 2) {
                 unprocessedVines.add("Неправильний формат -- $vineString")
                 return@mapNotNull null
             }
             return@mapNotNull try {
-                val phoneNumber = GetUserByNameAndRoleRequest(
-                    User.Name(parts[0]),
-                    User.Role.VINE_MAKER
-                ).execute()?.phoneNumber ?: run {
-                    unprocessedVines.add("Не знайдено винороба з іменем ${parts[0]} -- $vineString")
+//                val phoneNumber = GetUserByNameAndRoleRequest(
+//                    User.Name(parts[0]),
+//                    User.Role.VINE_MAKER
+//                ).execute()?.phoneNumber ?: run {
+//                    unprocessedVines.add("Не знайдено винороба з іменем ${parts[0]} -- $vineString")
+//                    return@mapNotNull null
+//                }
+                val newVine = Vine(null, null, metadata.vineType, Vine.SampleCode(parts[0]), Vine.RealType.fromString(parts[1]) ?: run {
+                    unprocessedVines.add("Неправильний тип вина (${parts[1]}) -- $vineString")
                     return@mapNotNull null
-                }
-                val newVine = Vine(phoneNumber, Vine.Name(parts[1]), metadata.vineType, Vine.SampleCode(parts[2]))
+                })
                 if(metadata.selectedVines.contains(newVine)) {
                     unprocessedVines.add("Це вино вже додано -- $vineString")
                     return@mapNotNull null
@@ -516,7 +526,7 @@ object CreateCompetitionFlow {
         val newUser = user.copy(
             conversationMetadata = newMetadata.toConversationMetadata(),
             currentInlineMarkupButtons = (user.currentInlineMarkupButtons + newVines.map { listOf(CallbackDataInlineKeyboardButton(
-                it.name.value,
+                it.sampleCode.value,
                 it.id.value + "_vine"
             )) }).map { row ->
                 row.distinctBy { it.callbackData.split("_").first() }
@@ -542,7 +552,7 @@ object CreateCompetitionFlow {
 
         reply(message,
             (if(unprocessedVines.isNotEmpty()) "Наступні вина не були додані:\n" +
-                unprocessedVines.joinToString("\n") else "") +
+                unprocessedVines.joinToString("\n") + "\n" else "") +
                 "Нижче розміщені всі успішно додані вина. Ви можете видалити вино, натиснувши на нього. Якщо ви хочете завершити вибір вин, надішліть \"✅ Завершити вибір вин\".",
             replyMarkup = InlineMarkupPaginationUtils.generateInlineMarkup(newUser)
         )

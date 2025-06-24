@@ -137,7 +137,14 @@ object AssessFlow {
     )
     suspend fun <BC : BehaviourContext> BC.requestCompetitionCategoryPick(user: User, vineId: Vine.SampleCode) {
         val activeCompetition = GetActiveCompetitionRequest().execute()!!
+        val assessmentRepository: VineAssessmentRepository by inject(VineAssessmentRepository::class.java)
+        val assessments = assessmentRepository.filter(
+            competitionId = activeCompetition.id,
+            to = vineId,
+            from = user.id
+        )
         val vine = activeCompetition.vines.find { it.id == vineId }!!
+        val categories = vine.realType.getCategories()
 
         UpdateConversationStateRequest(
             user.chatId!!,
@@ -145,12 +152,11 @@ object AssessFlow {
             COMPETITION_CATEGORY_PICK_REQUESTED_METADATA(vine.id).toConversationMetadata()
         ).execute()
 
-        val categories = activeCompetition.categories
 
         val newUser = user.copy(
             currentInlineMarkupButtons = categories.map { listOf(
                 CallbackDataInlineKeyboardButton(
-                    it.name.value,
+                    it.name.value.removeSuffix(" (Still wines)").removeSuffix(" (Sparkling wines)").removeSuffix(" (Spiritous wines)") + (assessments.find { assessment -> assessment.category == it.name }?.let { assessment -> " ✅ (${computeRealMark(it.name, assessment.mark)} балів)" } ?: " ❌"),
                     it.id.value + "_category_pick"
                 )
             ) },
@@ -165,7 +171,7 @@ object AssessFlow {
 
         send(
             user.chatId.toChatId(),
-            "Виберіть категорію для оцінки вина **${vine.sampleCode.value}** нижче.",
+            "Виберіть категорію для оцінки вина **${vine.sampleCode.value}** нижче. На разі сума балів становить **${assessments.sumOf { computeRealMark(it.category, it.mark) }}**.",
             replyMarkup = InlineMarkupPaginationUtils.generateInlineMarkup(newUser)
         )
     }
@@ -211,21 +217,25 @@ object AssessFlow {
             mark = mark
         ))
 
-        send(user.chatId!!.toChatId(), "Ви успішно оцінили вино ${vine.sampleCode.value} в категорії **${category.name.value}** на $mark балів.")
+        send(user.chatId!!.toChatId(), "Ви успішно оцінили вино ${vine.sampleCode.value} в категорії **${category.name.value}** на ${computeRealMark(category.name, mark)} балів.")
 
-        val index = activeCompetition.categories.indexOf(category)
-        if(index < activeCompetition.categories.size - 1) requestCompetitionVineMarkPick(user, vine.id, activeCompetition.categories[index + 1])
+        val categories = vine.realType.getCategories()
+
+        val index = categories.indexOf(category)
+        if(index < categories.size - 1) requestCompetitionVineMarkPick(user, vine.id, categories[index + 1])
         else {
             UpdateConversationStateRequest(
                 user.chatId,
                 ConversationState.INITIAL
             ).execute()
 
-            send(
-                user.chatId.toChatId(),
-                "Ви успішно оцінили вино ${vine.sampleCode.value} в деяких категоріях.",
-                replyMarkup = MenuUtils.generateMenu(ConversationState.INITIAL, user.role, true)
-            )
+//            send(
+//                user.chatId.toChatId(),
+//                "Ви успішно оцінили вино ${vine.sampleCode.value} в деяких категоріях.",
+//                replyMarkup = MenuUtils.generateMenu(ConversationState.INITIAL, user.role, true)
+//            )
+
+            requestCompetitionCategoryPick(user, vine.id)
         }
     }
 }

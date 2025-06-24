@@ -5,7 +5,6 @@ import domain.ports.repositories.VineAssessmentRepository
 import eth.likespro.atomarix.Atom
 import eth.likespro.atomarix.adapters.AtomarixExposedAdapter
 import eth.likespro.commons.models.Pagination
-import eth.likespro.commons.reflection.ObjectEncoding.encodeObject
 import infrastructure.persistence.tables.VineAssessmentsTable
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.andWhere
@@ -30,7 +29,7 @@ class VineAssessmentRepositoryImpl: VineAssessmentRepository {
         VineAssessmentsTable.selectAll()
             .let { if(competitionId != null) it.andWhere { VineAssessmentsTable.competitionId eq competitionId.value } else it }
             .let { if(from != null) it.andWhere { VineAssessmentsTable.from eq from.value } else it }
-            .let { if(to != null) it.andWhere { VineAssessmentsTable.to eq to.encodeObject() } else it }
+            .let { if(to != null) it.andWhere { VineAssessmentsTable.to eq to.value } else it }
             .let { if(category != null) it.andWhere { VineAssessmentsTable.category eq category.value } else it }
             .map { VineAssessmentsTable.fromRow(it) }
     }

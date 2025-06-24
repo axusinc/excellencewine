@@ -14,7 +14,7 @@ import kotlin.math.absoluteValue
 object ReportUtils {
     fun generateReport(activeCompetition: Competition, assessments: List<VineAssessment>, prefix: String = ""): Pair<File, Map<Vine.SampleCode, Double>> {
         val finalScores = mutableMapOf<Vine.SampleCode, Double>()
-        val vines = activeCompetition.vines.sortedBy { it.name.value }
+        val vines = activeCompetition.vines.sortedBy { it.sampleCode.value }
         val experts = activeCompetition.experts.sortedBy { it.name.value }
 
         val tmpFile = File("$prefix${activeCompetition.name.value}-report.xlsx")
@@ -41,9 +41,10 @@ object ReportUtils {
 
                 vines.forEach { vine ->
                     val scores = mutableMapOf<User.PhoneNumber, Double>()
+                    val categories = vine.realType.getCategories()
                     experts.forEach { expert ->
                         val expertAssessments = assessments.filter { it.to == vine.id && it.from == expert.id }
-                        if(expertAssessments.size == activeCompetition.categories.size) {
+                        if(expertAssessments.size == categories.size) {
                             val avgScore = expertAssessments.runningReduce { acc, vineAssessment -> acc.copy(mark = acc.mark + computeRealMark(vineAssessment.category, vineAssessment.mark)) }.lastOrNull()
                             if(avgScore != null) scores[expert.id] = avgScore.mark.toDouble()
                         }
@@ -66,9 +67,9 @@ object ReportUtils {
 
                     row {
                         cell(vine.sampleCode.value)
-                        val producer = runBlocking { GetUserRequest(vine.makerPhoneNumber).execute() }!!
-                        cell(producer.name.value)
-                        cell(vine.name.value)
+                        val producerName = vine.makerPhoneNumber?.let { runBlocking { GetUserRequest(it).execute()!!.name } } ?: ""
+                        cell(producerName)
+                        cell(vine.name?.value ?: "")
                         cell("")
                         cell(if(!averageScore.isNaN()) averageScore.round(2).toString() else "-")
                         cell(if(!finalScore.isNaN()) finalScore.round(2).toString() else "-", greenBackgroundStyle())
@@ -128,7 +129,7 @@ object ReportUtils {
             5 -> 8
             else -> throw IllegalArgumentException("Unknown mark: ${mark}")
         }
-        (Category.Name("Nose Positive intensity (Sparkling wines)")) -> mark + 1 // Ok
+        (Category.Name("Nose Positive intensity (Sparkling wines)")) -> mark + 2 // Ok
         (Category.Name("Nose Positive intensity (Spiritous beverages)")) -> (mark * 2) - 1 // Ok
         (Category.Name("Nose Quality (Still wines)")) -> (mark * 2) + 6 // Ok
         (Category.Name("Nose Quality (Sparkling wines)")) -> (mark * 2) + 4 // Ok

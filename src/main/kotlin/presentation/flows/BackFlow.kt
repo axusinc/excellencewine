@@ -55,7 +55,8 @@ object BackFlow {
         }
         ConversationState.COMPETITION_VINES_REQUESTED -> {
             val metadata = user.conversationMetadata.value.decodeObject<CreateCompetitionFlow.COMPETITION_VINES_REQUESTED_METADATA>()
-            requestCompetitionCategories(user, metadata.name, metadata.vineType, metadata.selectedExperts)
+//            requestCompetitionCategories(user, metadata.name, metadata.vineType, metadata.selectedExperts)
+            requestCompetitionExperts(user, metadata.name, metadata.vineType)
         }
 
         ConversationState.COMPETITION_VINE_PICK_REQUESTED -> showMainScreen(user, message)
