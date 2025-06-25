@@ -1,6 +1,7 @@
 package presentation.expert
 
 import dev.inmo.tgbotapi.types.buttons.ReplyKeyboardMarkup
+import dev.inmo.tgbotapi.types.buttons.ReplyKeyboardRemove
 import dev.inmo.tgbotapi.types.buttons.SimpleKeyboardButton
 import presentation.CommonStrings
 
@@ -13,7 +14,7 @@ fun generateExpertMenu() = ReplyKeyboardMarkup(
     resizeKeyboard = true,
     oneTimeKeyboard = false
 )
-fun generateExpertActiveMenu() = ReplyKeyboardMarkup(
+fun generateExpertActiveMenu() = /*ReplyKeyboardMarkup(listOf())*/ ReplyKeyboardRemove() /*ReplyKeyboardMarkup(
     listOf(
         listOf(
             SimpleKeyboardButton(CommonStrings.ASSESS),
@@ -22,4 +23,4 @@ fun generateExpertActiveMenu() = ReplyKeyboardMarkup(
     ),
     resizeKeyboard = true,
     oneTimeKeyboard = false
-)
+)*/

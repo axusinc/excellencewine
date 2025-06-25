@@ -30,11 +30,15 @@ fun generateAdminCompetitionActiveMenu() = ReplyKeyboardMarkup(
         listOf(
 //            SimpleKeyboardButton(CommonStrings.ASSESS),
 //            SimpleKeyboardButton(CommonStrings.MY_MARKS),
+            SimpleKeyboardButton(CommonStrings.ADD_WINE),
             SimpleKeyboardButton(CommonStrings.PREVIEW_RESULTS),
             SimpleKeyboardButton(CommonStrings.END_COMPETITION),
         ),
         listOf(
             SimpleKeyboardButton(CommonStrings.COMPETITIONS),
+        ),
+        listOf(
+            SimpleKeyboardButton(CommonStrings.ASSESSED_COMPLETELY)
         )
     ),
     resizeKeyboard = true,

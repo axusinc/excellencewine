@@ -46,8 +46,9 @@ object BackFlow {
         ConversationState.COMPETITION_NAME_REQUESTED -> showMainScreen(user, message)
         ConversationState.COMPETITION_VINE_TYPE_REQUESTED -> requestCompetitionName(user, message)
         ConversationState.COMPETITION_EXPERTS_SELECTION_REQUESTED -> {
-            val metadata = user.conversationMetadata.value.decodeObject<CreateCompetitionFlow.COMPETITION_EXPERTS_SELECTION_REQUESTED_METADATA>()
-            requestCompetitionVineType(user, message, metadata.name)
+//            val metadata = user.conversationMetadata.value.decodeObject<CreateCompetitionFlow.COMPETITION_EXPERTS_SELECTION_REQUESTED_METADATA>()
+//            requestCompetitionVineType(user, message, metadata.name)
+            requestCompetitionName(user, message)
         }
         ConversationState.COMPETITION_CATEGORIES_SELECTION_REQUESTED -> {
             val metadata = user.conversationMetadata.value.decodeObject<CreateCompetitionFlow.COMPETITION_CATEGORIES_SELECTION_REQUESTED_METADATA>()
@@ -63,7 +64,7 @@ object BackFlow {
         ConversationState.COMPETITION_CATEGORY_PICK_REQUESTED -> requestCompetitionVinePick(user, message)
         ConversationState.COMPETITION_VINE_MARK_REQUESTED -> {
             val metadata = user.conversationMetadata.value.decodeObject<AssessFlow.COMPETITION_VINE_MARK_REQUESTED_METADATA>()
-            requestCompetitionCategoryPick(user, metadata.vineId)
+            requestCompetitionCategoryPick(user, metadata.vine)
         }
 
         ConversationState.END_COMPETITION_REQUESTED -> showMainScreen(user, message)

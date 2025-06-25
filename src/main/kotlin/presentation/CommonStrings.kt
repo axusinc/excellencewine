@@ -13,11 +13,13 @@ object CommonStrings {
     const val COMPETITIONS = "Конкурси"
 
     const val START_COMPETITION = "Почати конкурс"
+    const val ADD_WINE = "Додати вино"
     const val END_COMPETITION = "Завершити конкурс"
 
     const val ASSESS = "Поставити оцінку"
     const val MY_MARKS = "Мої оцінки"
     const val PREVIEW_RESULTS = "Попередні результати"
+    const val ASSESSED_COMPLETELY = "Оцінки поставлені повністю?"
     fun getRoleReadableName(role: User.Role) = when(role) {
         User.Role.ADMIN -> "Адміністратор"
         User.Role.HEAD_OF_EXPERTS -> "Керівник експертів"

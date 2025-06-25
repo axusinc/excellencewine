@@ -60,7 +60,9 @@ object AssessFlow {
 
             val vineId = Vine.SampleCode(query.data.split("_").first())
 
-            requestCompetitionCategoryPick(user, vineId)
+            val activeCompetition = GetActiveCompetitionRequest().execute()!!
+            val vine = activeCompetition.vines.find { it.id == vineId }!!
+            requestCompetitionCategoryPick(user, vine)
         } catch (e: Exception) { e.printStackTrace(); send(query.user.id, CommonStrings.ERROR_UNKNOWN) } }
 
         onDataCallbackQuery { query -> try {
@@ -75,6 +77,7 @@ object AssessFlow {
             val metadata = user.conversationMetadata.value.decodeObject<COMPETITION_CATEGORY_PICK_REQUESTED_METADATA>()
             val category = Category(Category.Name(query.data.split("_").first()))
 
+            send(user.chatId!!.toChatId(), "Ви обрали категорію **${category.name.value}** для оцінки.", replyMarkup = MenuUtils.BACK_BUTTON_MENU)
             requestCompetitionVineMarkPick(user, metadata.vine, category)
         } catch (e: Exception) { e.printStackTrace(); send(query.user.id, CommonStrings.ERROR_UNKNOWN) } }
 
@@ -90,7 +93,7 @@ object AssessFlow {
             val metadata = user.conversationMetadata.value.decodeObject<COMPETITION_VINE_MARK_REQUESTED_METADATA>()
             val mark = query.data.split("_").first().toInt()
 
-            assessVine(user, metadata.vineId, metadata.category, mark)
+            assessVine(user, metadata.vine.id, metadata.category, mark)
         } catch (e: Exception) { e.printStackTrace(); send(query.user.id, CommonStrings.ERROR_UNKNOWN) } }
     }
 
@@ -135,15 +138,14 @@ object AssessFlow {
     data class COMPETITION_CATEGORY_PICK_REQUESTED_METADATA(
         val vine: Vine.SampleCode,
     )
-    suspend fun <BC : BehaviourContext> BC.requestCompetitionCategoryPick(user: User, vineId: Vine.SampleCode) {
+    suspend fun <BC : BehaviourContext> BC.requestCompetitionCategoryPick(user: User, vine: Vine) {
         val activeCompetition = GetActiveCompetitionRequest().execute()!!
         val assessmentRepository: VineAssessmentRepository by inject(VineAssessmentRepository::class.java)
         val assessments = assessmentRepository.filter(
             competitionId = activeCompetition.id,
-            to = vineId,
+            to = vine.id,
             from = user.id
         )
-        val vine = activeCompetition.vines.find { it.id == vineId }!!
         val categories = vine.realType.getCategories()
 
         UpdateConversationStateRequest(
@@ -177,7 +179,7 @@ object AssessFlow {
     }
 
     data class COMPETITION_VINE_MARK_REQUESTED_METADATA(
-        val vineId: Vine.SampleCode,
+        val vine: Vine,
         val category: Category,
     )
     suspend fun <BC : BehaviourContext> BC.requestCompetitionVineMarkPick(user: User, vineId: Vine.SampleCode, category: Category) {
@@ -187,7 +189,7 @@ object AssessFlow {
         UpdateConversationStateRequest(
             user.chatId!!,
             ConversationState.COMPETITION_VINE_MARK_REQUESTED,
-            COMPETITION_VINE_MARK_REQUESTED_METADATA(vine.id, category).toConversationMetadata()
+            COMPETITION_VINE_MARK_REQUESTED_METADATA(vine, category).toConversationMetadata()
         ).execute()
         val marks = (1..5)
 
@@ -235,7 +237,7 @@ object AssessFlow {
 //                replyMarkup = MenuUtils.generateMenu(ConversationState.INITIAL, user.role, true)
 //            )
 
-            requestCompetitionCategoryPick(user, vine.id)
+            requestCompetitionCategoryPick(user, vine)
         }
     }
 }

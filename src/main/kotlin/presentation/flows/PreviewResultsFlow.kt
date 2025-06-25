@@ -51,7 +51,11 @@ object PreviewResultsFlow {
             ConversationState.INITIAL
         ).execute()
 
-        sendDocument(user.chatId.toChatId(), InputFile.fromFile(report.first), text = "Оцінки конкурсу ${activeCompetition.name.value} у форматі Microsoft Excel.", replyMarkup = MenuUtils.generateMenu(ConversationState.INITIAL, user.role, true))
+        val lastVine = activeCompetition.vines.lastOrNull()
+        val assessedCompletely = lastVine?.let { vine -> assessments.filter { it.to == vine.id }.size == activeCompetition.experts.size * vine.realType.getCategories().size }
+
+        sendDocument(user.chatId.toChatId(), InputFile.fromFile(report.first), text = "Оцінки конкурсу ${activeCompetition.name.value} у форматі Microsoft Excel.\n" +
+                "Теперішнє вино (${lastVine?.sampleCode?.value}) повністю оцінено: $assessedCompletely", replyMarkup = MenuUtils.generateMenu(ConversationState.INITIAL, user.role, true))
         report.first.delete()
     }
 }

@@ -74,7 +74,9 @@ object CreateCompetitionFlow {
 
             logger.info { "Waiting for Competition Vine Type of new competition with $competitionName" }
 
-            requestCompetitionVineType(user, message, competitionName)
+            requestCompetitionExperts(user, competitionName, Vine.Type.RED)
+//            requestCompetitionVineType(user, message, competitionName)
+
         } catch (e: Exception) { e.printStackTrace(); reply(message, CommonStrings.ERROR_UNKNOWN) } }
 
         onDataCallbackQuery("red_vine_type") { query -> try {
@@ -113,11 +115,12 @@ object CreateCompetitionFlow {
             val userCompetitionExpertsSelectionRequestedMetadata =
                 user.conversationMetadata.value.decodeObject<COMPETITION_EXPERTS_SELECTION_REQUESTED_METADATA>()
             val expertPhoneNumber = User.PhoneNumber(query.data.split("_").first())
+            val expert = GetUserRequest(expertPhoneNumber).execute()!!
 
             val newConversationMetadata = userCompetitionExpertsSelectionRequestedMetadata.copy(
                 selectedExperts = userCompetitionExpertsSelectionRequestedMetadata.selectedExperts.let {
-                    if(!deselect) it + expertPhoneNumber
-                    else it - expertPhoneNumber
+                    if(!deselect) it + expert
+                    else it - expert
                 }
             )
             val newUser = user.copy(
@@ -167,11 +170,19 @@ object CreateCompetitionFlow {
 //                competitionExpertsSelectionRequestMetadata.vineType,
 //                competitionExpertsSelectionRequestMetadata.selectedExperts
 //            )
-            requestCompetitionVines(
+//            requestCompetitionVines(
+//                user,
+//                competitionExpertsSelectionRequestMetadata.name,
+//                competitionExpertsSelectionRequestMetadata.vineType,
+//                competitionExpertsSelectionRequestMetadata.selectedExperts,
+//                emptyList()
+//            )
+            createCompetition(
                 user,
                 competitionExpertsSelectionRequestMetadata.name,
                 competitionExpertsSelectionRequestMetadata.vineType,
                 competitionExpertsSelectionRequestMetadata.selectedExperts,
+                emptyList(),
                 emptyList()
             )
         } catch (e: Exception) { e.printStackTrace(); send(query.user.id, CommonStrings.ERROR_UNKNOWN) } }
@@ -362,7 +373,7 @@ object CreateCompetitionFlow {
     data class COMPETITION_EXPERTS_SELECTION_REQUESTED_METADATA(
         val name: Competition.Name,
         val vineType: Vine.Type,
-        val selectedExperts: List<User.PhoneNumber> = listOf()
+        val selectedExperts: List<User> = listOf()
     )
     suspend fun <BC : BehaviourContext> BC.requestCompetitionExperts(user: User, name: Competition.Name, vineType: Vine.Type) {
         UpdateConversationStateRequest(

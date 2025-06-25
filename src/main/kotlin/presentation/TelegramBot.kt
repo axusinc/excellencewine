@@ -6,7 +6,9 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPoll
 import presentation.InlineMarkupPaginationUtils.setupInlineMarkupPagination
 import presentation.StartBotFlow.setupStartBotFlow
 import presentation.flows.AddUserFlow.setupAddUserFlow
+import presentation.flows.AddWineFlow.setupAddWineFlow
 import presentation.flows.AssessFlow.setupAssessFlow
+import presentation.flows.AssessedCompletelyFlow.setupAssessedCompletelyFlow
 import presentation.flows.BackFlow.setupBackButtonFlow
 import presentation.flows.CreateCompetitionFlow.setupCreateCompetitionFlow
 import presentation.flows.EndCompetitionFlow.setupEndCompetitionFlow
@@ -31,6 +33,8 @@ object TelegramBot {
             setupMyMarksFlow()
             setupPreviewResultsFlow()
             setupEndCompetitionFlow()
+            setupAddWineFlow()
+            setupAssessedCompletelyFlow()
         }.join()
     }
 }

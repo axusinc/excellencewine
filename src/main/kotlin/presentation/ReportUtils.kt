@@ -134,6 +134,8 @@ object ReportUtils {
         (Category.Name("Nose Quality (Still wines)")) -> (mark * 2) + 6 // Ok
         (Category.Name("Nose Quality (Sparkling wines)")) -> (mark * 2) + 4 // Ok
         (Category.Name("Nose Quality (Spiritous beverages)")) -> (mark * 2) + 5 // Ok
+//        (Category.Name("Genuineness (Still wines)")) -> mark + 1 // Ok
+//        (Category.Name("Genuineness (Sparkling wines)")) -> mark + 2 // Ok
         (Category.Name("Taste Typicality")) -> mark + 3 // Ok
         (Category.Name("Taste Positive intensity (Still wines)")) -> when(mark) { // Ok
             1 -> 2
